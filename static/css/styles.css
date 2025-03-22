@@ -52,20 +52,134 @@ body {
 
 /* Top Bar */
 .top-bar {
-  background: var(--primary);
+  background: #001f3f;
+  /* Cafe Niloufer black background */
   color: #fff;
-  font-size: 0.9rem;
   padding: 10px 0;
 }
 
-.social-links a {
+.top-bar .container {
+  width: 100%;
+  max-width: 1200px;
+  /* Standard container width */
+  margin: 0 auto;
+}
+
+.top-bar .row {
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.top-bar .contact-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 15px;
+  /* Space between items */
+}
+
+.top-bar .contact-info a {
   color: #fff;
-  margin-left: 15px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+}
+
+.top-bar .contact-info a:hover {
+  color: var(--accent);
+  /* Orange hover effect */
+}
+
+.top-bar .contact-info i {
+  margin-right: 8px;
+  font-size: 1rem;
+}
+
+.top-bar .social-links {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  /* Space between social icons */
+}
+
+.top-bar .social-links a {
+  color: #fff;
+  font-size: 1rem;
   transition: var(--transition);
 }
 
-.social-links a:hover {
+.top-bar .social-links a:hover {
   color: var(--accent);
+  /* Orange hover effect */
+}
+
+/* Mobile-Friendly Adjustments */
+@media (max-width: 767px) {
+  .top-bar {
+    padding: 8px 0;
+  }
+
+  .top-bar .row {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .top-bar .contact-info {
+    justify-content: center;
+    margin-bottom: 10px;
+    gap: 10px;
+    /* Reduced gap for mobile */
+  }
+
+  .top-bar .contact-info a {
+    font-size: 0.85rem;
+  }
+
+  .top-bar .social-links {
+    justify-content: center;
+    margin-top: 5px;
+    gap: 10px;
+  }
+
+  .top-bar .social-links a {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 575px) {
+  .top-bar .contact-info a {
+    font-size: 0.8rem;
+  }
+
+  .top-bar .contact-info i {
+    margin-right: 6px;
+    font-size: 0.9rem;
+  }
+
+  .top-bar .social-links a {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .top-bar {
+    padding: 6px 0;
+  }
+
+  .top-bar .contact-info {
+    gap: 8px;
+  }
+
+  .top-bar .contact-info a {
+    font-size: 0.75rem;
+  }
+
+  .top-bar .social-links a {
+    font-size: 0.8rem;
+  }
 }
 
 /* Header & Navbar */
