@@ -8,7 +8,7 @@
 .carousel-item {
     position: relative;
     height: 60vh;
-    /* Default height for desktop */
+    /* Responsive height for desktop */
 }
 
 .carousel-item img {
@@ -48,11 +48,10 @@
         /* Smaller height for mobile devices */
     }
 
-    /* Ensure controls are more visible on mobile */
+    /* Hide navigation buttons on mobile devices */
     .carousel-control-prev,
     .carousel-control-next {
-        width: 15%;
-        /* Slightly wider touch targets */
+        display: none;
     }
 
     /* Ensure images maintain aspect ratio */
