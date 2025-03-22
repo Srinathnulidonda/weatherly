@@ -1,0 +1,408 @@
+/* Hero Slider Section */
+.hero-section {
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 0;
+}
+
+.carousel-item {
+    position: relative;
+    height: 60vh;
+    /* Responsive height */
+}
+
+.carousel-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 31, 63, 0.4);
+    z-index: 1;
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+    z-index: 2;
+    width: 10%;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+    opacity: 1;
+}
+
+/* Notification Banner Section */
+.notification-banner {
+    background-color: #fff;
+    padding: 10px 0;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+    position: relative;
+    z-index: 10;
+}
+
+.notification-wrapper {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 5px 15px;
+}
+
+.notification-badge {
+    background-color: #ff8c00;
+    color: #fff;
+    padding: 8px 15px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    margin-right: 15px;
+    margin-bottom: 10px;
+}
+
+.notification-badge i {
+    margin-right: 8px;
+}
+
+.marquee-container {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.marquee {
+    white-space: nowrap;
+    animation: marquee 20s linear infinite;
+}
+
+.marquee p {
+    margin: 0;
+    color: #001f3f;
+    font-weight: 500;
+}
+
+.marquee p span {
+    color: #ff8c00;
+    font-weight: 600;
+}
+
+.notification-btn {
+    background-color: #001f3f;
+    color: white;
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.notification-btn:hover {
+    background-color: #ff8c00;
+    color: white;
+    transform: translateY(-2px);
+}
+
+@keyframes marquee {
+    0% {
+        transform: translateX(100%);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+/* About Section */
+.about-section {
+    padding: 40px 0;
+    background-color: #f5f9ff;
+}
+
+.about-image {
+    margin-bottom: 25px;
+}
+
+.about-image img {
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    width: 100%;
+}
+
+.section-title h2 {
+    font-size: 28px;
+    margin-bottom: 15px;
+}
+
+.divider {
+    margin: 15px 0 20px;
+}
+
+.about-content p.lead {
+    font-size: 18px;
+    margin-bottom: 15px;
+}
+
+.feature-item {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+}
+
+.feature-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.pulse-icon {
+    animation: pulse 2s infinite;
+}
+
+.animated-btn {
+    transition: all 0.3s ease;
+}
+
+.animated-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 31, 63, 0.3);
+    background-color: #ff8c00 !important;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Media Queries for Responsive Design */
+@media (max-width: 991px) {
+    .carousel-item {
+        height: 50vh;
+    }
+
+    .about-content {
+        padding-top: 20px;
+    }
+}
+
+@media (max-width: 767px) {
+    .carousel-item {
+        height: 40vh;
+    }
+
+    .notification-wrapper {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .notification-badge,
+    .notification-btn {
+        margin-bottom: 10px;
+    }
+
+    .marquee-container {
+        width: 100%;
+        margin: 10px 0;
+    }
+
+    .section-title h2 {
+        font-size: 24px;
+    }
+
+    .about-content p.lead {
+        font-size: 16px;
+    }
+
+    .feature-item {
+        margin-bottom: 15px !important;
+    }
+}
+
+@media (max-width: 575px) {
+    .carousel-item {
+        height: 30vh;
+    }
+
+    .about-section {
+        padding: 30px 0;
+    }
+
+    .notification-badge {
+        font-size: 14px;
+        padding: 6px 12px;
+    }
+
+    .notification-btn {
+        padding: 6px 15px;
+        font-size: 14px;
+    }
+
+    .section-title h2 {
+        font-size: 22px;
+    }
+
+    .about-content p {
+        font-size: 14px;
+    }
+
+    .feature-item {
+        padding: 15px !important;
+    }
+
+    .feature-item h4 {
+        font-size: 16px !important;
+    }
+
+    .feature-item p {
+        font-size: 13px;
+    }
+
+    .animated-btn {
+        padding: 10px 20px !important;
+        font-size: 14px;
+    }
+}
+
+/* Base counter section styles */
+.counter-section {
+    padding: 3rem 0;
+    background-color: #001f3f;
+    background-image: linear-gradient(rgba(0, 31, 63, 0.9), rgba(0, 31, 63, 0.9)), url('static/images/pattern.png');
+    background-size: cover;
+    background-position: center;
+}
+
+/* Counter item styling */
+.counter-item {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 25px 15px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.counter-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Counter icon styling */
+.counter-icon {
+    background-color: #ff8c00;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    box-shadow: 0 5px 15px rgba(255, 140, 0, 0.3);
+}
+
+.counter-icon i {
+    color: white;
+    font-size: 24px;
+}
+
+/* Counter text styling */
+.counter-item h3 {
+    color: white;
+    font-weight: 700;
+    font-size: 36px;
+    margin-bottom: 5px;
+}
+
+.counter-item p {
+    color: #ff8c00;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0;
+    font-size: 14px;
+}
+
+.counter-border {
+    height: 3px;
+    width: 40px;
+    background-color: #ff8c00;
+    margin: 10px auto 0;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 767px) {
+    .counter-item {
+        padding: 20px 10px;
+    }
+
+    .counter-icon {
+        width: 50px;
+        height: 50px;
+    }
+
+    .counter-icon i {
+        font-size: 20px;
+    }
+
+    .counter-item h3 {
+        font-size: 28px;
+    }
+
+    .counter-item p {
+        font-size: 12px;
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 575px) {
+    .counter-section {
+        padding: 2rem 0;
+    }
+
+    .counter-item {
+        margin-bottom: 15px;
+    }
+
+    .counter-icon {
+        margin-bottom: 10px;
+    }
+
+    .counter-item h3 {
+        font-size: 24px;
+    }
+
+    /* Ensure two items per row on very small screens */
+    .counter-item {
+        min-height: 180px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+}
+
+/* Counter animation */
+.counter {
+    animation-duration: 2s;
+    animation-timing-function: ease;
+}
+
+/* Animation effect for AOS library */
+[data-aos] {
+    transition-duration: 800ms;
+}
