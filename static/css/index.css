@@ -8,7 +8,7 @@
 .carousel-item {
     position: relative;
     height: 60vh;
-    /* Responsive height */
+    /* Default height for desktop */
 }
 
 .carousel-item img {
@@ -39,6 +39,35 @@
 .carousel-control-prev:hover,
 .carousel-control-next:hover {
     opacity: 1;
+}
+
+/* Mobile Optimization */
+@media (max-width: 767px) {
+    .carousel-item {
+        height: 40vh;
+        /* Smaller height for mobile devices */
+    }
+
+    /* Ensure controls are more visible on mobile */
+    .carousel-control-prev,
+    .carousel-control-next {
+        width: 15%;
+        /* Slightly wider touch targets */
+    }
+
+    /* Ensure images maintain aspect ratio */
+    .carousel-item img {
+        object-position: center top;
+        /* Focus on top part of images for better mobile viewing */
+    }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+    .carousel-item {
+        height: 30vh;
+        /* Even smaller height for smaller devices */
+    }
 }
 
 /* Notification Banner Section */
