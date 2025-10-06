@@ -1,0 +1,10 @@
+Flask
+Flask-CORS
+Flask-Limiter
+Flask-Caching
+redis
+requests
+python-dotenv
+gunicorn
+gevent
+werkzeug
