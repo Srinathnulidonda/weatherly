@@ -32,7 +32,7 @@ class Config:
     WEATHER_API_BASE_URL = 'https://api.openweathermap.org/data/2.5'
     WEATHER_API_TIMEOUT = 10
     
-    REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+    REDIS_URL = os.getenv('REDIS_URL')
     
     CACHE_TYPE = 'simple'
     CACHE_DEFAULT_TIMEOUT = 300
