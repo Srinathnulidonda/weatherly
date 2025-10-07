@@ -3,216 +3,141 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#1e40af">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Weather</title>
+    <meta name="description" content="Real-time weather forecasts">
+    <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="description" content="Real-time weather with immersive animations">
-    <title>Weather Now - Live Weather Experience</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-    <div class="weather-scene" id="weatherScene"></div>
-    <canvas class="weather-canvas" id="weatherCanvas"></canvas>
-    <div class="weather-effects" id="weatherEffects"></div>
+    <div id="background" class="fixed inset-0 transition-all duration-700"></div>
+    <div id="weather-effects" class="fixed inset-0 pointer-events-none"></div>
 
-    <nav class="navbar">
-        <div class="navbar-content">
-            <div class="logo">
-                <i class="bi bi-cloud-sun-fill"></i>
-                <span>Weather Now</span>
-            </div>
-            <div class="nav-actions">
-                <button class="btn-icon" id="themeBtn" aria-label="Toggle theme">
-                    <i class="bi bi-moon-fill"></i>
-                </button>
-                <button class="btn-icon" id="refreshBtn" aria-label="Refresh">
-                    <i class="bi bi-arrow-clockwise"></i>
-                </button>
-            </div>
+    <header class="app-header">
+        <div class="header-wrapper">
+            <button class="location-btn" id="current-location-btn">
+                <i class="fas fa-location-dot"></i>
+                <span id="location-text">Loading...</span>
+            </button>
+            <button class="icon-btn" id="search-toggle">
+                <i class="fas fa-search"></i>
+            </button>
         </div>
-    </nav>
-
-    <main class="main-container">
-        <section class="search-section">
-            <div class="search-card glass">
-                <div class="search-wrapper">
-                    <div class="search-input-container">
-                        <i class="bi bi-search search-icon"></i>
-                        <input type="text" id="searchInput" class="search-input" placeholder="Search any city..."
-                            autocomplete="off">
-                        <button class="btn-location" id="locationBtn" aria-label="Use location">
-                            <i class="bi bi-crosshair2"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="quick-cities" id="quickCities"></div>
+        <div class="search-overlay" id="search-overlay">
+            <div class="search-container">
+                <i class="fas fa-search"></i>
+                <input type="text" id="location-search" placeholder="Search city..." autocomplete="off">
+                <button id="search-close"><i class="fas fa-times"></i></button>
             </div>
-        </section>
-
-        <div class="loader-container" id="loader">
-            <div class="weather-loader">
-                <div class="loader-cloud">
-                    <div class="cloud-particle"></div>
-                    <div class="cloud-particle"></div>
-                    <div class="cloud-particle"></div>
-                </div>
-            </div>
-            <p class="loader-text">Fetching weather data...</p>
+            <div id="search-suggestions"></div>
         </div>
+    </header>
 
-        <div class="error-container glass" id="errorContainer">
-            <div class="error-content">
-                <i class="bi bi-cloud-slash error-icon"></i>
-                <h3 class="error-title">Oops!</h3>
-                <p class="error-message" id="errorMessage"></p>
-                <button class="btn-primary" id="retryBtn">
-                    <i class="bi bi-arrow-clockwise"></i>
-                    Try Again
-                </button>
+    <main class="app-main">
+        <div class="loading-screen" id="loading-state">
+            <div class="loader">
+                <div class="loader-ring"></div>
+                <i class="fas fa-cloud-sun"></i>
             </div>
         </div>
 
-        <div class="weather-container" id="weatherContainer">
-            <div class="weather-card main-card glass">
-                <div class="weather-header">
-                    <div class="location-info">
-                        <h1 class="city-name" id="cityName"></h1>
-                        <p class="date-time" id="dateTime"></p>
-                    </div>
-                    <div class="weather-badge" id="weatherBadge">
-                        <i class="bi bi-geo-alt"></i>
-                        <span id="coordinates"></span>
-                    </div>
-                </div>
+        <div class="error-screen d-none" id="error-state">
+            <i class="fas fa-cloud-bolt"></i>
+            <h3>Weather Unavailable</h3>
+            <p id="error-message">Unable to fetch weather data</p>
+            <button class="retry-btn" onclick="WeatherApp.refreshWeather()">
+                Try Again
+            </button>
+        </div>
 
-                <div class="weather-main">
-                    <div class="temperature-section">
-                        <div class="temperature-display">
-                            <span class="temperature" id="temperature"></span>
-                            <span class="temperature-unit">°C</span>
-                        </div>
-                        <div class="temperature-range">
-                            <span class="temp-min">
-                                <i class="bi bi-thermometer-low"></i>
-                                <span id="tempMin"></span>°
-                            </span>
-                            <span class="temp-max">
-                                <i class="bi bi-thermometer-high"></i>
-                                <span id="tempMax"></span>°
-                            </span>
-                        </div>
+        <div class="weather-content d-none" id="weather-content">
+            <section class="hero-weather">
+                <div class="weather-now">
+                    <div class="temp-display">
+                        <span id="current-temp">--</span>
+                        <span class="temp-unit">°</span>
                     </div>
-
-                    <div class="weather-visual">
-                        <div class="weather-icon-wrapper">
-                            <img id="weatherIcon" class="weather-icon" alt="Weather">
-                            <div class="weather-glow"></div>
-                        </div>
-                        <p class="weather-description" id="description"></p>
-                        <p class="feels-like">Feels like <span id="feelsLike"></span>°C</p>
+                    <div class="weather-status">
+                        <img id="weather-icon" src="" alt="">
+                        <h2 id="weather-desc">--</h2>
                     </div>
-                </div>
-
-                <div class="weather-details">
-                    <div class="detail-item">
-                        <div class="detail-icon">
-                            <i class="bi bi-wind"></i>
+                    <div class="weather-stats">
+                        <div class="stat">
+                            <span class="stat-icon">↑</span>
+                            <span id="temp-high">--°</span>
                         </div>
-                        <div class="detail-content">
-                            <span class="detail-value" id="windSpeed"></span>
-                            <span class="detail-label">Wind Speed</span>
+                        <div class="stat">
+                            <span class="stat-icon">↓</span>
+                            <span id="temp-low">--°</span>
                         </div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-icon">
-                            <i class="bi bi-droplet-half"></i>
-                        </div>
-                        <div class="detail-content">
-                            <span class="detail-value" id="humidity"></span>
-                            <span class="detail-label">Humidity</span>
-                        </div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-icon">
-                            <i class="bi bi-speedometer"></i>
-                        </div>
-                        <div class="detail-content">
-                            <span class="detail-value" id="pressure"></span>
-                            <span class="detail-label">Pressure</span>
-                        </div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-icon">
-                            <i class="bi bi-eye"></i>
-                        </div>
-                        <div class="detail-content">
-                            <span class="detail-value" id="visibility"></span>
-                            <span class="detail-label">Visibility</span>
-                        </div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-icon">
-                            <i class="bi bi-cloud"></i>
-                        </div>
-                        <div class="detail-content">
-                            <span class="detail-value" id="clouds"></span>
-                            <span class="detail-label">Cloudiness</span>
-                        </div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-icon">
-                            <i class="bi bi-compass"></i>
-                        </div>
-                        <div class="detail-content">
-                            <span class="detail-value" id="windDirection"></span>
-                            <span class="detail-label">Wind Dir</span>
+                        <div class="stat">
+                            <span class="stat-icon">💧</span>
+                            <span id="rain-chance">--%</span>
                         </div>
                     </div>
                 </div>
+            </section>
 
-                <div class="sun-info">
-                    <div class="sun-item sunrise">
-                        <i class="bi bi-sunrise-fill"></i>
-                        <div>
-                            <span class="sun-label">Sunrise</span>
-                            <span class="sun-time" id="sunrise"></span>
-                        </div>
+            <section class="forecast-container">
+                <div class="forecast-header">
+                    <h3>Today</h3>
+                </div>
+                <div class="hourly-scroll" id="hourly-forecast"></div>
+            </section>
+
+            <section class="weekly-container">
+                <h3>This Week</h3>
+                <div id="daily-forecast"></div>
+            </section>
+
+            <section class="details-container">
+                <div class="detail-grid" id="weather-details">
+                    <div class="detail-tile">
+                        <i class="fas fa-wind"></i>
+                        <span class="detail-label">Wind</span>
+                        <span class="detail-value" id="wind-speed">--</span>
                     </div>
-                    <div class="sun-progress">
-                        <div class="sun-path">
-                            <div class="sun-position" id="sunPosition"></div>
-                        </div>
+                    <div class="detail-tile">
+                        <i class="fas fa-droplet"></i>
+                        <span class="detail-label">Humidity</span>
+                        <span class="detail-value"><span id="humidity">--</span>%</span>
                     </div>
-                    <div class="sun-item sunset">
-                        <i class="bi bi-sunset-fill"></i>
-                        <div>
-                            <span class="sun-label">Sunset</span>
-                            <span class="sun-time" id="sunset"></span>
-                        </div>
+                    <div class="detail-tile">
+                        <i class="fas fa-eye"></i>
+                        <span class="detail-label">Visibility</span>
+                        <span class="detail-value"><span id="visibility">--</span>km</span>
+                    </div>
+                    <div class="detail-tile">
+                        <i class="fas fa-gauge-high"></i>
+                        <span class="detail-label">Pressure</span>
+                        <span class="detail-value"><span id="pressure">--</span>hPa</span>
+                    </div>
+                    <div class="detail-tile">
+                        <i class="fas fa-sun"></i>
+                        <span class="detail-label">UV Index</span>
+                        <span class="detail-value" id="uv-index">--</span>
+                    </div>
+                    <div class="detail-tile">
+                        <i class="fas fa-clock"></i>
+                        <span class="detail-label">Sunrise</span>
+                        <span class="detail-value" id="sunrise">--</span>
                     </div>
                 </div>
-            </div>
-
-            <div class="forecast-section">
-                <h2 class="forecast-title glass">
-                    <i class="bi bi-calendar-week"></i>
-                    5-Day Forecast
-                </h2>
-                <div class="forecast-grid" id="forecastGrid"></div>
-            </div>
+            </section>
         </div>
     </main>
 
-    <script src="animations.js"></script>
-    <script src="app.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="js/main.js"></script>
 </body>
 
 </html>
