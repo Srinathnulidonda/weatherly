@@ -4,14 +4,25 @@ const WeatherApp = {
     currentCity: 'London',
     currentData: null,
     forecastData: null,
+    savedLocations: [],
+    recentSearches: [],
     units: {
         temperature: localStorage.getItem('tempUnit') || 'metric',
         wind: localStorage.getItem('windUnit') || 'metric'
     },
+    settings: {
+        animations: localStorage.getItem('animations') !== 'false',
+        uvIndex: localStorage.getItem('uvIndex') !== 'false',
+        alerts: localStorage.getItem('alerts') === 'true'
+    },
 
     async init() {
+        this.loadSavedData();
         this.bindEvents();
         this.setupTouch();
+        this.initSettings();
+        this.updateUIUnits();
+        this.setupSearch();
 
         const lastCity = localStorage.getItem('lastCity');
         if (lastCity) {
@@ -20,6 +31,16 @@ const WeatherApp = {
         } else {
             this.getDeviceLocation();
         }
+
+        this.updateDate();
+        setInterval(() => this.updateDate(), 60000);
+    },
+
+    loadSavedData() {
+        this.savedLocations = JSON.parse(localStorage.getItem('savedLocations') || '[]');
+        this.recentSearches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+        this.updateSavedLocationsUI();
+        this.updateRecentSearchesUI();
     },
 
     setupTouch() {
@@ -38,33 +59,610 @@ const WeatherApp = {
         }, { passive: true });
     },
 
+    isDesktop() {
+        return window.innerWidth >= 1024;
+    },
+
     bindEvents() {
+        document.getElementById('menu-toggle').addEventListener('click', () => {
+            this.toggleMobileMenu();
+        });
+
+        document.getElementById('menu-close').addEventListener('click', () => {
+            this.toggleMobileMenu();
+        });
+
         document.getElementById('current-location-btn').addEventListener('click', () => {
             this.getDeviceLocation();
         });
 
-        document.getElementById('search-toggle').addEventListener('click', () => {
+        const searchToggle = document.getElementById('search-toggle');
+        if (searchToggle) {
+            searchToggle.addEventListener('click', () => {
+                if (!this.isDesktop()) {
+                    this.toggleSearch();
+                }
+            });
+        }
+
+        document.getElementById('search-back').addEventListener('click', () => {
             this.toggleSearch();
         });
 
-        document.getElementById('search-close').addEventListener('click', () => {
-            this.toggleSearch();
+        const desktopSearchInput = document.getElementById('desktop-search-input');
+        const desktopSearchClear = document.getElementById('desktop-search-clear');
+        const desktopSearch = document.getElementById('desktop-search');
+
+        if (desktopSearchInput) {
+            let desktopSearchTimeout;
+
+            desktopSearchInput.addEventListener('input', e => {
+                const value = e.target.value.trim();
+                desktopSearchClear.classList.toggle('d-none', !value);
+
+                clearTimeout(desktopSearchTimeout);
+
+                if (value.length === 0) {
+                    this.clearDesktopSearch();
+                    return;
+                }
+
+                if (value.length < 2) return;
+
+                this.showDesktopSearchLoading(true);
+                desktopSearchTimeout = setTimeout(() => this.handleDesktopSearch(value), 400);
+            });
+
+            desktopSearchInput.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const value = e.target.value.trim();
+                    if (value) {
+                        this.selectDesktopSuggestion(value);
+                    }
+                } else if (e.key === 'Escape') {
+                    this.clearDesktopSearch();
+                    desktopSearchInput.blur();
+                }
+            });
+
+            desktopSearchInput.addEventListener('focus', () => {
+                if (desktopSearchInput.value.trim().length >= 2) {
+                    this.handleDesktopSearch(desktopSearchInput.value.trim());
+                }
+            });
+
+            desktopSearchClear.addEventListener('click', () => {
+                desktopSearchInput.value = '';
+                desktopSearchClear.classList.add('d-none');
+                this.clearDesktopSearch();
+                desktopSearchInput.focus();
+            });
+
+            document.addEventListener('click', e => {
+                if (!desktopSearch.contains(e.target)) {
+                    this.clearDesktopSearch();
+                }
+            });
+        }
+
+        window.addEventListener('resize', () => {
+            if (this.isDesktop()) {
+                const overlay = document.getElementById('search-overlay');
+                if (overlay.classList.contains('active')) {
+                    overlay.classList.remove('active');
+                    document.body.classList.remove('search-open');
+                    document.body.style.top = '';
+                }
+            }
         });
 
+        document.getElementById('settings-toggle').addEventListener('click', () => {
+            this.toggleSettings();
+        });
+
+        document.getElementById('settings-close').addEventListener('click', () => {
+            this.toggleSettings();
+        });
+
+        document.getElementById('mobile-settings').addEventListener('click', (e) => {
+            e.preventDefault();
+            this.toggleMobileMenu();
+            this.toggleSettings();
+        });
+
+        document.getElementById('mobile-about').addEventListener('click', (e) => {
+            e.preventDefault();
+            this.toggleMobileMenu();
+            this.openAbout();
+        });
+
+        const desktopAbout = document.getElementById('desktop-about');
+        if (desktopAbout) {
+            desktopAbout.addEventListener('click', () => {
+                this.openAbout();
+            });
+        }
+
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const unit = btn.dataset.unit;
+                const value = btn.dataset.value;
+                this.updateUnit(unit, value);
+            });
+        });
+
+        document.getElementById('animations-toggle').addEventListener('change', e => {
+            this.settings.animations = e.target.checked;
+            localStorage.setItem('animations', e.target.checked);
+            if (!e.target.checked) {
+                WeatherAnimations.clear();
+            } else if (this.currentData) {
+                const theme = ThemeEngine.applyTheme(
+                    this.currentData.weather.main,
+                    this.currentData.weather.description
+                );
+                WeatherAnimations.startAnimation(theme.weatherCategory);
+            }
+        });
+
+        document.getElementById('uv-toggle').addEventListener('change', e => {
+            this.settings.uvIndex = e.target.checked;
+            localStorage.setItem('uvIndex', e.target.checked);
+            document.querySelector('.uv-tile').style.display = e.target.checked ? 'flex' : 'none';
+        });
+
+        document.getElementById('alerts-toggle').addEventListener('change', e => {
+            this.settings.alerts = e.target.checked;
+            localStorage.setItem('alerts', e.target.checked);
+            if (e.target.checked) {
+                this.requestNotificationPermission();
+            }
+        });
+
+        document.addEventListener('click', e => {
+            if (e.target.classList.contains('menu-overlay')) {
+                this.toggleMobileMenu();
+            }
+        });
+    },
+
+    setupSearch() {
         const searchInput = document.getElementById('location-search');
+        const clearBtn = document.getElementById('clear-search');
+        const searchOverlay = document.getElementById('search-overlay');
         let searchTimeout;
 
         searchInput.addEventListener('input', e => {
+            const value = e.target.value.trim();
+            clearBtn.classList.toggle('d-none', !value);
+
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => this.handleSearch(e.target.value), 300);
+
+            if (value.length === 0) {
+                this.showDefaultSearch();
+                this.showMobileSearchLoading(false);
+                return;
+            }
+
+            if (value.length < 2) return;
+
+            this.showMobileSearchLoading(true);
+            searchTimeout = setTimeout(() => {
+                this.performSearch(value);
+            }, 400);
         });
 
-        searchInput.addEventListener('keypress', e => {
-            if (e.key === 'Enter') {
+        searchInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && e.target.value.trim()) {
                 e.preventDefault();
-                this.searchLocation(e.target.value);
+                this.searchLocation(e.target.value.trim());
+            } else if (e.key === 'Escape') {
+                this.toggleSearch();
             }
         });
+
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            clearBtn.classList.add('d-none');
+            searchInput.focus();
+            this.showDefaultSearch();
+            this.showMobileSearchLoading(false);
+        });
+
+        const observer = new MutationObserver(() => {
+            if (searchOverlay.classList.contains('active')) {
+                setTimeout(() => {
+                    searchInput.focus();
+                    if ('ontouchstart' in window) {
+                        searchInput.click();
+                    }
+                }, 350);
+            }
+        });
+
+        observer.observe(searchOverlay, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+    },
+
+    showDesktopSearchLoading(show) {
+        const searchIcon = document.querySelector('.desktop-search .search-icon');
+        const loadingSpinner = document.querySelector('.desktop-search .search-loading-spinner');
+
+        if (show) {
+            searchIcon.style.opacity = '0';
+            loadingSpinner.classList.remove('d-none');
+        } else {
+            searchIcon.style.opacity = '1';
+            loadingSpinner.classList.add('d-none');
+        }
+    },
+
+    showMobileSearchLoading(show) {
+        const searchIcon = document.querySelector('.search-input-icon');
+        const loadingSpinner = document.querySelector('.search-input-loading');
+
+        if (show) {
+            searchIcon.style.opacity = '0';
+            loadingSpinner.classList.remove('d-none');
+        } else {
+            searchIcon.style.opacity = '1';
+            loadingSpinner.classList.add('d-none');
+        }
+    },
+
+    async handleDesktopSearch(query) {
+        const container = document.getElementById('desktop-search-suggestions');
+
+        if (!container || query.length < 2) {
+            this.clearDesktopSearch();
+            return;
+        }
+
+        try {
+            const cities = [
+                { name: 'New York', country: 'United States', region: 'New York' },
+                { name: 'London', country: 'United Kingdom', region: 'England' },
+                { name: 'Tokyo', country: 'Japan', region: 'Kanto' },
+                { name: 'Paris', country: 'France', region: 'Île-de-France' },
+                { name: 'Sydney', country: 'Australia', region: 'New South Wales' },
+                { name: 'Mumbai', country: 'India', region: 'Maharashtra' },
+                { name: 'Dubai', country: 'UAE', region: 'Dubai' },
+                { name: 'Singapore', country: 'Singapore', region: 'Central' },
+                { name: 'Los Angeles', country: 'United States', region: 'California' },
+                { name: 'Chicago', country: 'United States', region: 'Illinois' },
+                { name: 'Toronto', country: 'Canada', region: 'Ontario' },
+                { name: 'Berlin', country: 'Germany', region: 'Berlin' },
+                { name: 'Madrid', country: 'Spain', region: 'Madrid' },
+                { name: 'Rome', country: 'Italy', region: 'Lazio' },
+                { name: 'Bangkok', country: 'Thailand', region: 'Bangkok' },
+                { name: 'Seoul', country: 'South Korea', region: 'Seoul' }
+            ];
+
+            const results = cities.filter(city =>
+                city.name.toLowerCase().includes(query.toLowerCase()) ||
+                city.country.toLowerCase().includes(query.toLowerCase())
+            ).slice(0, 6);
+
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+            this.showDesktopSearchLoading(false);
+
+            if (results.length === 0) {
+                this.clearDesktopSearch();
+                return;
+            }
+
+            container.innerHTML = results.map(city => `
+                <div class="desktop-suggestion-item" onclick="WeatherApp.selectDesktopSuggestion('${city.name}')">
+                    <i class="fas fa-location-dot"></i>
+                    <span>${city.name}, ${city.country}</span>
+                </div>
+            `).join('');
+
+            container.classList.add('active');
+
+        } catch (error) {
+            console.error('Desktop search error:', error);
+            this.showDesktopSearchLoading(false);
+            this.clearDesktopSearch();
+        }
+    },
+
+    clearDesktopSearch() {
+        const container = document.getElementById('desktop-search-suggestions');
+        if (container) {
+            container.classList.remove('active');
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 300);
+        }
+    },
+
+    selectDesktopSuggestion(city) {
+        const input = document.getElementById('desktop-search-input');
+        if (input) {
+            input.value = '';
+            document.getElementById('desktop-search-clear').classList.add('d-none');
+        }
+        this.clearDesktopSearch();
+        this.searchLocation(city);
+    },
+
+    async performSearch(query) {
+        this.showSearchLoading();
+
+        try {
+            const cities = [
+                { name: 'New York', country: 'United States', region: 'New York', lat: 40.7128, lon: -74.0060 },
+                { name: 'London', country: 'United Kingdom', region: 'England', lat: 51.5074, lon: -0.1278 },
+                { name: 'Tokyo', country: 'Japan', region: 'Kanto', lat: 35.6762, lon: 139.6503 },
+                { name: 'Paris', country: 'France', region: 'Île-de-France', lat: 48.8566, lon: 2.3522 },
+                { name: 'Sydney', country: 'Australia', region: 'New South Wales', lat: -33.8688, lon: 151.2093 },
+                { name: 'Mumbai', country: 'India', region: 'Maharashtra', lat: 19.0760, lon: 72.8777 },
+                { name: 'Dubai', country: 'UAE', region: 'Dubai', lat: 25.2048, lon: 55.2708 },
+                { name: 'Singapore', country: 'Singapore', region: 'Central', lat: 1.3521, lon: 103.8198 },
+                { name: 'Los Angeles', country: 'United States', region: 'California', lat: 34.0522, lon: -118.2437 },
+                { name: 'Chicago', country: 'United States', region: 'Illinois', lat: 41.8781, lon: -87.6298 },
+                { name: 'Toronto', country: 'Canada', region: 'Ontario', lat: 43.6532, lon: -79.3832 },
+                { name: 'Berlin', country: 'Germany', region: 'Berlin', lat: 52.5200, lon: 13.4050 },
+                { name: 'Madrid', country: 'Spain', region: 'Madrid', lat: 40.4168, lon: -3.7038 },
+                { name: 'Rome', country: 'Italy', region: 'Lazio', lat: 41.9028, lon: 12.4964 },
+                { name: 'Bangkok', country: 'Thailand', region: 'Bangkok', lat: 13.7563, lon: 100.5018 },
+                { name: 'Seoul', country: 'South Korea', region: 'Seoul', lat: 37.5665, lon: 126.9780 }
+            ];
+
+            const results = cities.filter(city => {
+                const searchLower = query.toLowerCase();
+                return city.name.toLowerCase().includes(searchLower) ||
+                    city.country.toLowerCase().includes(searchLower) ||
+                    city.region.toLowerCase().includes(searchLower);
+            }).slice(0, 8);
+
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            this.showMobileSearchLoading(false);
+
+            if (results.length > 0) {
+                this.displaySearchResults(results);
+            } else {
+                this.showNoResults(query);
+            }
+        } catch (error) {
+            console.error('Search error:', error);
+            this.showMobileSearchLoading(false);
+            this.showDefaultSearch();
+        }
+    },
+
+    displaySearchResults(results) {
+        const container = document.getElementById('search-suggestions');
+        const defaultContent = document.getElementById('default-search-content');
+        const loading = document.getElementById('search-loading');
+
+        loading.classList.add('d-none');
+        defaultContent.classList.add('d-none');
+
+        container.innerHTML = `
+            <div class="search-section">
+                <div class="section-header">
+                    <h4><i class="fas fa-search"></i> Search Results</h4>
+                </div>
+                ${results.map(city => `
+                    <div class="search-item" onclick="WeatherApp.searchLocation('${city.name}')">
+                        <div class="search-item-icon">
+                            <i class="fas fa-location-dot"></i>
+                        </div>
+                        <div class="search-item-content">
+                            <div class="search-item-title">${city.name}</div>
+                            <div class="search-item-subtitle">${city.region}, ${city.country}</div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    },
+
+    showDefaultSearch() {
+        document.getElementById('search-suggestions').innerHTML = '';
+        document.getElementById('default-search-content').classList.remove('d-none');
+        document.getElementById('search-loading').classList.add('d-none');
+    },
+
+    showSearchLoading() {
+        document.getElementById('search-loading').classList.remove('d-none');
+        document.getElementById('default-search-content').classList.add('d-none');
+        document.getElementById('search-suggestions').innerHTML = '';
+    },
+
+    showNoResults(query) {
+        const container = document.getElementById('search-suggestions');
+        const defaultContent = document.getElementById('default-search-content');
+        const loading = document.getElementById('search-loading');
+
+        loading.classList.add('d-none');
+        defaultContent.classList.add('d-none');
+
+        container.innerHTML = `
+            <div class="empty-state" style="padding: 60px 20px; text-align: center;">
+                <i class="fas fa-search" style="font-size: 48px; color: rgba(255,255,255,0.3); margin-bottom: 16px;"></i>
+                <h4 style="color: var(--text-primary); margin-bottom: 8px; font-size: 18px;">No results found</h4>
+                <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 14px;">
+                    Try searching for a different city or check your spelling
+                </p>
+            </div>
+        `;
+    },
+
+    initSettings() {
+        document.getElementById('animations-toggle').checked = this.settings.animations;
+        document.getElementById('uv-toggle').checked = this.settings.uvIndex;
+        document.getElementById('alerts-toggle').checked = this.settings.alerts;
+
+        if (!this.settings.uvIndex) {
+            document.querySelector('.uv-tile').style.display = 'none';
+        }
+
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            const unit = btn.dataset.unit;
+            const value = btn.dataset.value;
+            if ((unit === 'temp' && value === this.units.temperature) ||
+                (unit === 'wind' && value === this.units.wind)) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    },
+
+    toggleMobileMenu() {
+        const menu = document.getElementById('mobile-menu');
+        const isActive = menu.classList.toggle('active');
+
+        if (isActive) {
+            const overlay = document.createElement('div');
+            overlay.className = 'menu-overlay active';
+            document.body.appendChild(overlay);
+        } else {
+            const overlay = document.querySelector('.menu-overlay');
+            if (overlay) overlay.remove();
+        }
+    },
+
+    toggleSearch() {
+        if (this.isDesktop()) {
+            return;
+        }
+
+        const overlay = document.getElementById('search-overlay');
+        const searchInput = document.getElementById('location-search');
+        const isOpening = !overlay.classList.contains('active');
+
+        overlay.classList.toggle('active');
+
+        if (isOpening) {
+            document.body.classList.add('search-open');
+            document.body.style.top = `-${window.scrollY}px`;
+
+            setTimeout(() => {
+                searchInput.focus();
+                this.updateRecentSearchesUI();
+            }, 300);
+        } else {
+            const scrollY = document.body.style.top;
+            document.body.classList.remove('search-open');
+            document.body.style.top = '';
+            window.scrollTo(0, parseInt(scrollY || '0') * -1);
+
+            searchInput.value = '';
+            document.getElementById('search-suggestions').innerHTML = '';
+            document.getElementById('clear-search').classList.add('d-none');
+            this.showDefaultSearch();
+            this.showMobileSearchLoading(false);
+        }
+    },
+
+    toggleSettings() {
+        const panel = document.getElementById('settings-panel');
+        panel.classList.toggle('active');
+    },
+
+    updateUnit(unitType, value) {
+        document.querySelectorAll(`.toggle-btn[data-unit="${unitType}"]`).forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === value);
+        });
+
+        if (unitType === 'temp') {
+            this.units.temperature = value;
+            localStorage.setItem('tempUnit', value);
+        } else if (unitType === 'wind') {
+            this.units.wind = value;
+            localStorage.setItem('windUnit', value);
+        }
+
+        this.updateUI();
+        this.updateUIUnits();
+    },
+
+    updateUIUnits() {
+        const tempUnit = this.units.temperature === 'imperial' ? 'F' : 'C';
+        document.querySelectorAll('.temp-unit').forEach(el => {
+            el.textContent = `°${tempUnit}`;
+        });
+    },
+
+    updateDate() {
+        const now = new Date();
+        const options = { weekday: 'long', month: 'long', day: 'numeric' };
+        const dateStr = now.toLocaleDateString('en-US', options);
+        const dateEl = document.getElementById('today-date');
+        if (dateEl) dateEl.textContent = dateStr;
+    },
+
+    async searchLocation(city) {
+        if (!city || city.trim() === '') return;
+
+        this.addRecentSearch(city.trim());
+        this.toggleSearch();
+        await this.loadWeatherData(city.trim());
+    },
+
+    addRecentSearch(city) {
+        this.recentSearches = this.recentSearches.filter(c => c.toLowerCase() !== city.toLowerCase());
+        this.recentSearches.unshift(city);
+        this.recentSearches = this.recentSearches.slice(0, 5);
+        localStorage.setItem('recentSearches', JSON.stringify(this.recentSearches));
+    },
+
+    updateRecentSearchesUI() {
+        const container = document.getElementById('recent-list');
+        const section = document.getElementById('recent-searches');
+
+        if (!this.recentSearches.length) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = 'block';
+        container.innerHTML = this.recentSearches.map(city => `
+            <div class="search-item" onclick="WeatherApp.searchLocation('${city}')">
+                <div class="search-item-icon">
+                    <i class="fas fa-history"></i>
+                </div>
+                <div class="search-item-content">
+                    <div class="search-item-title">${city}</div>
+                </div>
+            </div>
+        `).join('');
+    },
+
+    clearRecentSearches() {
+        this.recentSearches = [];
+        localStorage.setItem('recentSearches', JSON.stringify([]));
+        this.updateRecentSearchesUI();
+        document.getElementById('recent-searches').style.display = 'none';
+    },
+
+    updateSavedLocationsUI() {
+        const desktopContainer = document.getElementById('saved-locations-desktop');
+        if (!desktopContainer) return;
+
+        if (this.savedLocations.length === 0) {
+            desktopContainer.innerHTML = '<p style="color: var(--text-secondary); font-size: 14px;">No saved locations</p>';
+            return;
+        }
+
+        desktopContainer.innerHTML = this.savedLocations.map(location => `
+            <div class="saved-location-item" onclick="WeatherApp.loadWeatherData('${location.city}')">
+                <div>
+                    <div style="font-weight: 500;">${location.city}</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">${location.temp}°</div>
+                </div>
+                <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
+            </div>
+        `).join('');
     },
 
     async loadWeatherData(city = this.currentCity) {
@@ -93,6 +691,18 @@ const WeatherApp = {
 
             this.updateUI();
             this.showContent();
+
+            if (document.getElementById('feels-like')) {
+                document.getElementById('feels-like').textContent =
+                    Math.round(this.convertTemperature(this.currentData.temperature.feels_like)) + '°';
+            }
+            if (document.getElementById('dew-point')) {
+                const t = this.currentData.temperature.current;
+                const rh = this.currentData.details.humidity;
+                const dewPoint = t - ((100 - rh) / 5);
+                document.getElementById('dew-point').textContent =
+                    Math.round(this.convertTemperature(dewPoint)) + '°';
+            }
 
             if ('vibrate' in navigator) {
                 navigator.vibrate(10);
@@ -145,10 +755,13 @@ const WeatherApp = {
             this.currentData.weather.main,
             this.currentData.weather.description
         );
-        WeatherAnimations.startAnimation(theme.weatherCategory);
+
+        if (this.settings.animations) {
+            WeatherAnimations.startAnimation(theme.weatherCategory);
+        }
 
         const iconEl = document.getElementById('weather-icon');
-        iconEl.src = `https://openweathermap.org/img/wn/${this.currentData.weather.icon}@2x.png`;
+        iconEl.src = `https://openweathermap.org/img/wn/${this.currentData.weather.icon}@4x.png`;
         iconEl.alt = this.currentData.weather.description;
 
         document.getElementById('current-temp').textContent =
@@ -178,7 +791,11 @@ const WeatherApp = {
         document.getElementById('humidity').textContent = details.humidity;
         document.getElementById('visibility').textContent = details.visibility;
         document.getElementById('pressure').textContent = details.pressure;
-        document.getElementById('uv-index').textContent = Math.floor(Math.random() * 11);
+
+        if (this.settings.uvIndex) {
+            document.getElementById('uv-index').textContent = Math.floor(Math.random() * 11);
+        }
+
         document.getElementById('sunrise').textContent = this.currentData.sun.sunrise;
     },
 
@@ -236,43 +853,9 @@ const WeatherApp = {
         }
     },
 
-    handleSearch(query) {
-        const suggestions = document.getElementById('search-suggestions');
-
-        if (query.length < 2) {
-            suggestions.innerHTML = '';
-            return;
-        }
-
-        const cities = [
-            'New York, US', 'London, UK', 'Tokyo, JP', 'Paris, FR',
-            'Sydney, AU', 'Mumbai, IN', 'Dubai, AE', 'Singapore, SG'
-        ].filter(city => city.toLowerCase().includes(query.toLowerCase()));
-
-        suggestions.innerHTML = cities.map(city => `
-            <div class="search-suggestion" onclick="WeatherApp.searchLocation('${city.split(',')[0]}')">
-                <i class="fas fa-location-dot me-2"></i>${city}
-            </div>
-        `).join('');
-    },
-
-    async searchLocation(city) {
-        if (!city || city.trim() === '') return;
-        this.toggleSearch();
-        await this.loadWeatherData(city.trim());
-    },
-
-    toggleSearch() {
-        const overlay = document.getElementById('search-overlay');
-        const searchInput = document.getElementById('location-search');
-
-        overlay.classList.toggle('active');
-
-        if (overlay.classList.contains('active')) {
-            searchInput.focus();
-        } else {
-            searchInput.value = '';
-            document.getElementById('search-suggestions').innerHTML = '';
+    requestNotificationPermission() {
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
         }
     },
 
@@ -304,6 +887,10 @@ const WeatherApp = {
         if (content) {
             content.style.opacity = '1';
         }
+    },
+
+    openAbout() {
+        window.location.href = '/about.html';
     },
 
     showLoading() {
