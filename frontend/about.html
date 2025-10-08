@@ -12,26 +12,22 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="About Weather App">
     <meta property="og:description"
         content="Beautiful weather forecasts with real-time updates and stunning visualizations">
     <meta property="og:type" content="website">
     <meta property="og:image" content="/assets/og-image.png">
 
-    <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="About Weather App">
     <meta name="twitter:description" content="Beautiful weather forecasts with real-time updates">
     <meta name="twitter:image" content="/assets/twitter-card.png">
 
-    <!-- Preconnect to external origins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
 
-    <!-- Stylesheets -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -40,18 +36,11 @@
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="stylesheet" href="css/style.css">
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png">
     <style>
-        /* ===== CSS VARIABLES WITH RESPONSIVE SCALING ===== */
         :root {
-            /* Base font size for responsive scaling */
             --base-font-size: 16px;
 
-            /* Responsive spacing using clamp() */
             --spacing-xs: clamp(0.25rem, 1vw, 0.5rem);
             --spacing-sm: clamp(0.5rem, 2vw, 1rem);
             --spacing-md: clamp(1rem, 3vw, 1.5rem);
@@ -59,7 +48,6 @@
             --spacing-xl: clamp(2rem, 5vw, 3rem);
             --spacing-2xl: clamp(3rem, 6vw, 4rem);
 
-            /* Responsive font sizes */
             --font-xs: clamp(0.625rem, 2vw, 0.75rem);
             --font-sm: clamp(0.75rem, 2.5vw, 0.875rem);
             --font-base: clamp(0.875rem, 3vw, 1rem);
@@ -70,7 +58,6 @@
             --font-4xl: clamp(2rem, 8vw, 3rem);
             --font-5xl: clamp(2.5rem, 10vw, 4rem);
 
-            /* Colors remain the same */
             --header-height: 60px;
             --primary: #3B82F6;
             --primary-dark: #2563EB;
@@ -87,7 +74,6 @@
             --glass-active: rgba(255, 255, 255, 0.15);
             --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
-            /* Responsive border radius */
             --radius-sm: clamp(0.375rem, 1.5vw, 0.5rem);
             --radius-md: clamp(0.5rem, 2vw, 0.75rem);
             --radius-lg: clamp(0.75rem, 3vw, 1rem);
@@ -96,7 +82,6 @@
             --radius-full: 9999px;
         }
 
-        /* Adjust variables for small screens */
         @media (max-width: 480px) {
             :root {
                 --header-height: 56px;
@@ -111,7 +96,6 @@
             }
         }
 
-        /* ===== GLOBAL RESPONSIVE STYLES ===== */
         * {
             margin: 0;
             padding: 0;
@@ -139,7 +123,6 @@
             line-height: 1.6;
         }
 
-        /* ===== RESPONSIVE CONTAINER ===== */
         .about-container {
             width: 100%;
             max-width: min(1200px, 100%);
@@ -150,7 +133,6 @@
             min-height: -webkit-fill-available;
         }
 
-        /* ===== RESPONSIVE HEADER ===== */
         .about-header {
             position: fixed;
             top: 0;
@@ -196,7 +178,6 @@
             margin: 0;
         }
 
-        /* ===== RESPONSIVE HERO SECTION ===== */
         .hero-section {
             text-align: center;
             padding: var(--spacing-2xl) var(--spacing-lg);
@@ -258,7 +239,6 @@
             white-space: nowrap;
         }
 
-        /* ===== RESPONSIVE SECTIONS ===== */
         .about-section {
             background: var(--glass);
             backdrop-filter: blur(20px);
@@ -284,7 +264,6 @@
             color: var(--primary);
         }
 
-        /* ===== RESPONSIVE FEATURES GRID ===== */
         .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
@@ -336,7 +315,6 @@
             line-height: 1.5;
         }
 
-        /* ===== RESPONSIVE STATISTICS ===== */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(min(45%, 140px), 1fr));
@@ -369,7 +347,6 @@
             line-height: 1.3;
         }
 
-        /* ===== RESPONSIVE TECH STACK ===== */
         .tech-stack {
             display: flex;
             flex-wrap: wrap;
@@ -396,7 +373,6 @@
             font-size: var(--font-sm);
         }
 
-        /* ===== RESPONSIVE DEVELOPER SECTION ===== */
         .developer-section {
             background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.05));
             border: 1px solid rgba(99, 102, 241, 0.2);
@@ -485,7 +461,6 @@
             display: inline-block;
         }
 
-        /* ===== RESPONSIVE ATTRIBUTION ===== */
         .attribution-card {
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(6, 182, 212, 0.05));
             border: 1px solid rgba(59, 130, 246, 0.2);
@@ -519,7 +494,6 @@
             padding: 0 var(--spacing-sm);
         }
 
-        /* ===== RESPONSIVE CONTACT SECTION ===== */
         .contact-section {
             background: var(--glass);
             border: 1px solid var(--glass-border);
@@ -566,7 +540,6 @@
             font-size: var(--font-base);
         }
 
-        /* ===== RESPONSIVE FOOTER ===== */
         .footer-section {
             text-align: center;
             padding: var(--spacing-2xl) var(--spacing-lg);
@@ -601,7 +574,6 @@
             line-height: 1.5;
         }
 
-        /* ===== ANIMATIONS ===== */
         @keyframes float {
 
             0%,
@@ -650,9 +622,6 @@
             }
         }
 
-        /* ===== RESPONSIVE MEDIA QUERIES ===== */
-
-        /* Ultra small devices (280px - 359px) */
         @media only screen and (max-width: 359px) {
             .about-container {
                 padding: var(--spacing-sm);
@@ -701,7 +670,6 @@
             }
         }
 
-        /* Small devices (360px - 479px) */
         @media only screen and (min-width: 360px) and (max-width: 479px) {
             .features-grid {
                 grid-template-columns: 1fr;
@@ -716,7 +684,6 @@
             }
         }
 
-        /* Medium devices (480px - 767px) */
         @media only screen and (min-width: 480px) and (max-width: 767px) {
             .features-grid {
                 grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -727,7 +694,6 @@
             }
         }
 
-        /* Tablets (768px - 1023px) */
         @media only screen and (min-width: 768px) and (max-width: 1023px) {
             .features-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -738,7 +704,6 @@
             }
         }
 
-        /* Large screens (1024px+) */
         @media only screen and (min-width: 1024px) {
             .features-grid {
                 grid-template-columns: repeat(3, 1fr);
@@ -753,7 +718,6 @@
             }
         }
 
-        /* Landscape orientation adjustments */
         @media only screen and (orientation: landscape) and (max-height: 500px) {
             :root {
                 --header-height: 48px;
@@ -774,7 +738,6 @@
             }
         }
 
-        /* Handle notch and safe areas */
         @supports (padding: max(0px)) {
             .about-header {
                 padding-top: max(0px, env(safe-area-inset-top));
@@ -791,7 +754,6 @@
             }
         }
 
-        /* High DPI screens */
         @media only screen and (-webkit-min-device-pixel-ratio: 2),
         only screen and (min-resolution: 192dpi) {
 
@@ -802,7 +764,6 @@
             }
         }
 
-        /* Accessibility - Reduced Motion */
         @media (prefers-reduced-motion: reduce) {
 
             *,
@@ -815,14 +776,12 @@
             }
         }
 
-        /* Dark mode optimizations */
         @media (prefers-color-scheme: dark) {
             .attribution-logo {
                 filter: brightness(0.8) invert(1);
             }
         }
 
-        /* Touch device optimizations */
         @media (hover: none) and (pointer: coarse) {
 
             .back-btn,
@@ -842,7 +801,6 @@
             }
         }
 
-        /* Font size accessibility */
         @media screen and (min-width: 320px) {
             html {
                 font-size: calc(14px + 2 * ((100vw - 320px) / 680));
@@ -855,7 +813,6 @@
             }
         }
 
-        /* Handle foldable devices */
         @media (screen-spanning: single-fold-vertical) {
             .features-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -863,7 +820,6 @@
             }
         }
 
-        /* Print styles */
         @media print {
 
             .about-header,
@@ -885,11 +841,9 @@
 </head>
 
 <body>
-    <!-- Animated Background -->
     <div id="background" class="fixed inset-0 transition-all duration-700"></div>
     <div id="particles" class="fixed inset-0 pointer-events-none"></div>
 
-    <!-- Header -->
     <header class="about-header">
         <div class="about-header-content">
             <button class="back-btn" onclick="goBack()" aria-label="Go back">
@@ -899,9 +853,7 @@
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="about-container">
-        <!-- Hero Section -->
         <section class="hero-section lazy-load">
             <div class="app-logo">
                 <i class="fas fa-cloud-sun"></i>
@@ -915,7 +867,6 @@
             </div>
         </section>
 
-        <!-- Features Section -->
         <section class="about-section lazy-load">
             <h3 class="section-title">
                 <i class="fas fa-star"></i>
@@ -979,7 +930,6 @@
             </div>
         </section>
 
-        <!-- Statistics Section -->
         <section class="about-section lazy-load">
             <h3 class="section-title">
                 <i class="fas fa-chart-bar"></i>
@@ -1005,7 +955,6 @@
             </div>
         </section>
 
-        <!-- Technology Section -->
         <section class="about-section lazy-load">
             <h3 class="section-title">
                 <i class="fas fa-code"></i>
@@ -1043,7 +992,6 @@
             </div>
         </section>
 
-        <!-- Weather Data Attribution -->
         <section class="attribution-card lazy-load">
             <img src="https://openweathermap.org/themes/openweathermap/assets/img/logo_white_cropped.png"
                 alt="OpenWeatherMap" class="attribution-logo">
@@ -1053,7 +1001,6 @@
             </p>
         </section>
 
-        <!-- Developer Section -->
         <section class="developer-section lazy-load">
             <div class="developer-content">
                 <div class="developer-avatar">SN</div>
@@ -1089,7 +1036,6 @@
             </div>
         </section>
 
-        <!-- Contact Section -->
         <section class="contact-section lazy-load">
             <h3 class="section-title">
                 <i class="fas fa-headset"></i>
@@ -1114,7 +1060,6 @@
             </div>
         </section>
 
-        <!-- Footer -->
         <footer class="footer-section">
             <p>© 2025 Weather App. All rights reserved.</p>
             <div class="footer-links">
@@ -1133,9 +1078,7 @@
         </footer>
     </main>
 
-    <!-- Scripts -->
     <script>
-        // Viewport height fix for mobile browsers
         function setViewportHeight() {
             const vh = window.innerHeight * 0.01;
             document.documentElement.style.setProperty('--vh', `${vh}px`);
@@ -1145,7 +1088,6 @@
         window.addEventListener('resize', setViewportHeight);
         window.addEventListener('orientationchange', setViewportHeight);
 
-        // Dynamic background based on time
         function setDynamicBackground() {
             const hour = new Date().getHours();
             const background = document.getElementById('background');
@@ -1163,13 +1105,11 @@
             }
         }
 
-        // Responsive particle effect
         function createParticles() {
             const particlesContainer = document.getElementById('particles');
             const screenWidth = window.innerWidth;
             let particleCount;
 
-            // Adjust particle count based on screen size
             if (screenWidth < 480) {
                 particleCount = 10;
             } else if (screenWidth < 768) {
@@ -1198,7 +1138,6 @@
             }
         }
 
-        // Lazy loading with Intersection Observer
         function setupLazyLoading() {
             const lazyElements = document.querySelectorAll('.lazy-load');
 
@@ -1224,7 +1163,6 @@
             });
         }
 
-        // Navigation
         function goBack() {
             if (window.history.length > 1) {
                 window.history.back();
@@ -1233,7 +1171,6 @@
             }
         }
 
-        // Contact functions
         function reportBug() {
             window.open('https://github.com/Srinathnulidonda/weather-app/issues/new', '_blank');
         }
@@ -1242,7 +1179,6 @@
             window.open('https://github.com/Srinathnulidonda/weather-app/issues/new', '_blank');
         }
 
-        // Touch feedback for mobile
         function addTouchFeedback() {
             const touchElements = document.querySelectorAll('.feature-card, .stat-card, .tech-badge, .developer-link, .contact-btn');
 
@@ -1257,14 +1193,12 @@
             });
         }
 
-        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             setDynamicBackground();
             createParticles();
             setupLazyLoading();
             addTouchFeedback();
 
-            // Recalculate on orientation change
             window.addEventListener('orientationchange', () => {
                 setTimeout(() => {
                     setViewportHeight();
@@ -1273,7 +1207,6 @@
                 }, 100);
             });
 
-            // Add keyboard navigation
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     goBack();
@@ -1281,7 +1214,6 @@
             });
         });
 
-        // Performance monitoring
         if ('performance' in window) {
             window.addEventListener('load', () => {
                 const perfData = performance.getEntriesByType('navigation')[0];
