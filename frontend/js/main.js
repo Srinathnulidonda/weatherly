@@ -23,6 +23,7 @@ const WeatherApp = {
         this.initSettings();
         this.updateUIUnits();
         this.setupSearch();
+        this.setupSimpleAppDownload(); // Added app download setup
 
         const lastCity = localStorage.getItem('lastCity');
         if (lastCity) {
@@ -285,6 +286,199 @@ const WeatherApp = {
             attributes: true,
             attributeFilter: ['class']
         });
+    },
+
+    // New Simple App Download Setup
+    setupSimpleAppDownload() {
+        const downloadBtn = document.getElementById('simple-download');
+        const pwaBtn = document.getElementById('simple-pwa');
+
+        if (!downloadBtn || !pwaBtn) return; // Exit if elements don't exist
+
+        // Android Download
+        downloadBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            // Add success animation
+            downloadBtn.classList.add('download-success');
+
+            // Show downloading state
+            const originalText = downloadBtn.querySelector('span').textContent;
+            const originalIcon = downloadBtn.querySelector('i').className;
+            downloadBtn.querySelector('span').textContent = 'Downloading...';
+            downloadBtn.querySelector('i').className = 'fas fa-spinner fa-spin';
+
+            // Start download
+            const link = document.createElement('a');
+            link.href = downloadBtn.href;
+            link.download = 'WeatherApp.apk';
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Track download analytics
+            this.trackDownload('android_apk');
+
+            // Reset button with success state
+            setTimeout(() => {
+                downloadBtn.querySelector('span').textContent = 'Downloaded!';
+                downloadBtn.querySelector('i').className = 'fas fa-check';
+
+                // Show success notification
+                this.showDownloadNotification('Download started! Check your Downloads folder.');
+
+                setTimeout(() => {
+                    downloadBtn.querySelector('span').textContent = originalText;
+                    downloadBtn.querySelector('i').className = originalIcon;
+                    downloadBtn.classList.remove('download-success');
+                }, 2000);
+            }, 1000);
+        });
+
+        // PWA Installation
+        let deferredPrompt;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            pwaBtn.style.display = 'flex';
+        });
+
+        pwaBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+
+                if (outcome === 'accepted') {
+                    this.showDownloadNotification('App installed successfully!');
+                    this.trackDownload('pwa_install');
+                }
+
+                deferredPrompt = null;
+            } else {
+                // Show device-specific instructions
+                this.showPWAInstructions();
+            }
+        });
+
+        // Hide PWA button if already installed
+        window.addEventListener('appinstalled', () => {
+            pwaBtn.style.display = 'none';
+            this.showDownloadNotification('Weather App installed to your home screen!');
+        });
+
+        // Check if PWA is already installed
+        if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+            pwaBtn.style.display = 'none';
+        }
+    },
+
+    trackDownload(type) {
+        // Simple analytics tracking
+        try {
+            const analytics = {
+                type: type,
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                platform: navigator.platform
+            };
+
+            // Store locally for now (you can send to your analytics service)
+            localStorage.setItem('lastDownload', JSON.stringify(analytics));
+
+            // Optional: Send to analytics service
+            // fetch('/api/analytics/download', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(analytics)
+            // }).catch(e => console.log('Analytics failed:', e));
+
+        } catch (error) {
+            console.log('Analytics tracking failed:', error);
+        }
+    },
+
+    showDownloadNotification(message) {
+        // Create a simple notification
+        const notification = document.createElement('div');
+        notification.className = 'download-notification';
+        notification.innerHTML = `
+            <div class="notification-content">
+                <i class="fas fa-check-circle"></i>
+                <span>${message}</span>
+            </div>
+        `;
+
+        // Add notification styles if not already present
+        if (!document.getElementById('notification-styles')) {
+            const style = document.createElement('style');
+            style.id = 'notification-styles';
+            style.textContent = `
+                .download-notification {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: rgba(16, 185, 129, 0.95);
+                    color: white;
+                    padding: 16px 20px;
+                    border-radius: 12px;
+                    backdrop-filter: blur(10px);
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+                    z-index: 10000;
+                    transform: translateX(100%);
+                    transition: transform 0.3s ease;
+                    max-width: 300px;
+                }
+                .download-notification.show {
+                    transform: translateX(0);
+                }
+                .notification-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+                .notification-content i {
+                    font-size: 18px;
+                }
+                @media (max-width: 480px) {
+                    .download-notification {
+                        left: 20px;
+                        right: 20px;
+                        max-width: none;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        document.body.appendChild(notification);
+
+        // Show notification
+        setTimeout(() => notification.classList.add('show'), 100);
+
+        // Hide and remove notification
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    },
+
+    showPWAInstructions() {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isAndroid = /Android/.test(navigator.userAgent);
+
+        let message = '';
+
+        if (isIOS) {
+            message = 'Tap the Share button (⎙) in Safari, then select "Add to Home Screen"';
+        } else if (isAndroid) {
+            message = 'Tap the menu (⋮) in your browser, then select "Add to Home Screen" or "Install App"';
+        } else {
+            message = 'Look for an install button in your browser\'s address bar';
+        }
+
+        this.showDownloadNotification(message);
     },
 
     showDesktopSearchLoading(show) {
